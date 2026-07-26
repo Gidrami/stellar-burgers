@@ -10,3 +10,6 @@ declare module 'react' {
     onPointerLeaveCapture?: (e: React.PointerEvent<T>) => void;
   }
 }
+
+declare module '*.css';
+declare module '*.module.css';
