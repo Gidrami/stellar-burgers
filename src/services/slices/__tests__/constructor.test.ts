@@ -2,7 +2,6 @@ import {
   addIngredient,
   clearConstructor,
   constructorSlice,
-  initialState,
   moveIngredient,
   removeIngredient,
   TConstructorState
@@ -10,6 +9,7 @@ import {
 import { bun, filling } from './fixtures';
 
 const reducer = constructorSlice.reducer;
+const emptyState: TConstructorState = { bun: null, ingredients: [] };
 const first = { ...filling, id: 'first' };
 const second = { ...filling, id: 'second' };
 const populated: TConstructorState = {
@@ -19,23 +19,43 @@ const populated: TConstructorState = {
 
 describe('Редьюсер burgerConstructor', () => {
   test('Возвращает начальное состояние для undefined и неизвестного экшена', () => {
-    expect(reducer(undefined, { type: 'UNKNOWN' })).toEqual(initialState);
-  });
-
-  test('Добавляет булку', () => {
-    const action = addIngredient(bun);
-    expect(reducer(initialState, action)).toEqual({
-      bun: action.payload,
+    expect(reducer(undefined, { type: 'UNKNOWN' })).toEqual({
+      bun: null,
       ingredients: []
     });
   });
 
+  test('Добавляет булку', () => {
+    const action = addIngredient(bun);
+    const state = reducer(emptyState, action);
+    expect(state).toEqual({
+      bun: { ...bun, id: expect.any(String) },
+      ingredients: []
+    });
+    expect(state.bun?.id).toBeTruthy();
+  });
+
   test('Добавляет начинку', () => {
     const action = addIngredient(filling);
-    expect(reducer(initialState, action)).toEqual({
+    const state = reducer(emptyState, action);
+    expect(state).toEqual({
       bun: null,
-      ingredients: [action.payload]
+      ingredients: [{ ...filling, id: expect.any(String) }]
     });
+    expect(state.ingredients[0].id).toBeTruthy();
+  });
+
+  test('Генерирует разные id при повторном добавлении одной начинки', () => {
+    const state = reducer(
+      reducer(emptyState, addIngredient(filling)),
+      addIngredient(filling)
+    );
+
+    expect(state.ingredients).toEqual([
+      { ...filling, id: expect.any(String) },
+      { ...filling, id: expect.any(String) }
+    ]);
+    expect(state.ingredients[0].id).not.toBe(state.ingredients[1].id);
   });
 
   test('Удаляет начинку по id', () => {
@@ -62,6 +82,9 @@ describe('Редьюсер burgerConstructor', () => {
   });
 
   test('Очищает конструктор', () => {
-    expect(reducer(populated, clearConstructor())).toEqual(initialState);
+    expect(reducer(populated, clearConstructor())).toEqual({
+      bun: null,
+      ingredients: []
+    });
   });
 });
